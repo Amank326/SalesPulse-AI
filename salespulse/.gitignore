@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.env
+.env.local
+ml/saved_models/
+*.joblib
+*.sqlite3
+*.db
+node_modules/
+dist/
+.vscode/
+/.DS_Store
+/.idea/

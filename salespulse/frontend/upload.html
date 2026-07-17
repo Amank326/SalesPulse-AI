@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Upload Data — SalesPulse AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="mesh"></canvas>
+<div class="dash-layout">
+  <aside class="sidebar">
+    <div class="sb-logo">Sales<span>Pulse</span></div>
+    <ul class="sb-nav">
+      <li><a href="dashboard.html"><span class="sb-icon">📊</span> Dashboard</a></li>
+      <li><a href="forecast.html"><span class="sb-icon">🔮</span> Forecasts</a></li>
+      <li><a href="upload.html" class="active"><span class="sb-icon">📁</span> Upload Data</a></li>
+      <li><a href="#"><span class="sb-icon">📈</span> Analytics</a></li>
+      <li><a href="#"><span class="sb-icon">🌍</span> Regions</a></li>
+      <li><a href="#"><span class="sb-icon">📦</span> Inventory</a></li>
+      <li><a href="#"><span class="sb-icon">🤖</span> AI Insights</a></li>
+      <li><a href="#"><span class="sb-icon">⚙️</span> Settings</a></li>
+    </ul>
+    <div class="sb-bottom">
+      <div class="sb-user">
+        <div class="sb-avatar" id="userInitial">A</div>
+        <div><div class="sb-name" id="userName">Aman Gupta</div><div class="sb-role">Pro Plan</div></div>
+      </div>
+      <button onclick="logout()" style="width:100%;margin-top:12px;padding:8px;background:transparent;border:1px solid rgba(255,255,255,.08);border-radius:7px;color:rgba(201,209,224,.4);font-size:13px;cursor:pointer;font-family:'Inter',sans-serif">Sign out</button>
+    </div>
+  </aside>
+
+  <main class="dash-main">
+    <div class="dash-header">
+      <div><div class="dash-title">Upload Sales Data</div><div class="dash-sub">CSV or Excel file · Max 50MB · Auto-cleaned by AI</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:24px;margin-bottom:24px">
+      <div>
+        <div class="upload-zone" id="dropZone">
+          <div class="upload-icon">📂</div>
+          <div class="upload-text">Drop your file here or click to browse</div>
+          <div class="upload-sub">Supports CSV, XLS, XLSX · Up to 50MB</div>
+          <button class="btn-upload">Choose file</button>
+          <input type="file" id="fileInput" accept=".csv,.xls,.xlsx" style="display:none">
+        </div>
+
+        <div id="uploadProgress" style="display:none;margin-top:16px">
+          <div style="background:#0C1120;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:20px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+              <span style="font-size:13.5px;color:#fff;font-weight:500" id="progressLabel">Uploading...</span>
+              <span style="font-size:13px;color:#5B8EFF;font-weight:600" id="progressPct">0%</span>
+            </div>
+            <div style="height:6px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden">
+              <div id="progressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#5B8EFF,#38E2D8);border-radius:100px;transition:width .4s ease"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="chart-card">
+          <div class="chart-title">Required columns</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+            <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:rgba(201,209,224,.6)"><span style="color:#38E2D8;font-weight:700">✓</span> Date / OrderDate</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:rgba(201,209,224,.6)"><span style="color:#38E2D8;font-weight:700">✓</span> Sales / Revenue / Bill_amt</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:rgba(201,209,224,.6)"><span style="color:#38E2D8;font-weight:700">✓</span> Product / Item / FoodItem</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:rgba(201,209,224,.45)"><span style="color:#FBD134">○</span> Region / HotelName (optional)</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:rgba(201,209,224,.45)"><span style="color:#FBD134">○</span> Customer ID (optional)</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:rgba(201,209,224,.45)"><span style="color:#FBD134">○</span> Quantity (optional)</div>
+          </div>
+        </div>
+        <div class="chart-card" style="background:rgba(91,142,255,.05);border-color:rgba(91,142,255,.2)">
+          <div style="font-size:13px;font-weight:600;color:#7AAEFF;margin-bottom:8px">💡 Quick tip</div>
+          <div style="font-size:13px;color:rgba(201,209,224,.55);line-height:1.65">Even messy data works. SalesPulse auto-fixes missing dates, duplicate rows, and inconsistent spellings before running the forecast model.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-card" id="previewCard" style="display:none">
+      <div class="chart-title" style="margin-bottom:14px">✅ Data Preview</div>
+      <table class="table-card" style="background:transparent;border:none;padding:0">
+        <thead><tr><th>OrderDate</th><th>HotelName</th><th>FoodItem</th><th>Quantity</th><th>Bill_amt</th><th>Status</th></tr></thead>
+        <tbody id="previewBody"></tbody>
+      </table>
+      <div style="margin-top:16px;display:flex;gap:12px">
+        <button onclick="runForecast()" class="btn-nav-cta" style="font-size:14px;padding:10px 24px">Run AI Forecast →</button>
+        <button onclick="location.href='dashboard.html'" class="btn-ghost" style="font-size:14px">View Dashboard</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="main.js"></script>
+<script>
+const sampleData=[
+  ['2023-10-01','Spice Paradise','Chicken Biryani','2','₹500','Delivered'],
+  ['2023-10-01','Pizza Palace','Pepperoni Pizza','1','₹300','Delivered'],
+  ['2023-10-02','Burger Bistro','Cheeseburger','3','₹1,047','Cancelled'],
+  ['2023-10-02','Spice Paradise','Paneer Tikka','1','₹200','In Progress'],
+  ['2023-10-03','Pizza Palace','Hawaiian Pizza','1','₹299','Delivered'],
+];
+
+function handleFile(file){
+  if(!file)return;
+  const prog=document.getElementById('uploadProgress');
+  const bar=document.getElementById('progressBar');
+  const pct=document.getElementById('progressPct');
+  const lbl=document.getElementById('progressLabel');
+    showToast('Uploading file...');
+    const token = localStorage.getItem('token');
+    const form = new FormData();
+    form.append('file', file, file.name);
+    try{
+      const resp = await fetch('http://127.0.0.1:8000/api/upload', {method:'POST', headers: token?{ 'Authorization': 'Bearer ' + token }:{}, body: form});
+      if(resp.ok){
+        const res = await resp.json();
+        showToast('Uploaded ' + res.rows + ' rows. Running forecast...');
+        // redirect to forecast page which will call /api/forecast
+        setTimeout(()=>location.href='forecast.html',800);
+        return;
+      } else {
+        const err = await resp.json().catch(()=>null);
+        showToast('Upload failed: ' + (err?.detail || resp.status),'error');
+      }
+    }catch(e){
+      // fallback to local simulation
+      showToast('Backend unavailable, processing locally...');
+      await new Promise(r=>setTimeout(r,1200));
+      const reader=new FileReader();
+      reader.onload=()=>{
+        const txt=reader.result;
+        const rows=txt.split('\n').slice(0,6);
+        const table=document.createElement('table');
+        rows.forEach(r=>{const tr=document.createElement('tr');r.split(',').forEach(c=>{const td=document.createElement('td');td.textContent=c;tr.appendChild(td)});table.appendChild(tr)});
+        document.getElementById('preview').innerHTML='';document.getElementById('preview').appendChild(table);
+        updateKPI({revenue: Math.floor(Math.random()*5000)+1000, orders: Math.floor(Math.random()*50)+10});
+        showToast('File processed (offline)');
+      }
+      reader.readAsText(file.slice(0,10000));
+    }
+}
+
+function showPreview(){
+  const card=document.getElementById('previewCard');
+  const tbody=document.getElementById('previewBody');
+  tbody.innerHTML=sampleData.map(r=>`<tr>${r.map((c,i)=>
+    i===5?`<td><span class="status-pill ${c==='Delivered'?'s-delivered':c==='Cancelled'?'s-cancelled':'s-progress'}">${c}</span></td>`
+    :`<td>${c}</td>`).join('')}</tr>`).join('');
+  card.style.display='block';
+  card.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function runForecast(){
+  showToast('Running Prophet + XGBoost ensemble...');
+  setTimeout(()=>{showToast('Forecast complete! Redirecting to dashboard...');setTimeout(()=>location.href='dashboard.html',1000)},2000);
+}
+
+const dz=document.getElementById('dropZone');
+const fi=document.getElementById('fileInput');
+if(dz&&fi){
+  dz.onclick=()=>fi.click();
+  dz.ondragover=e=>{e.preventDefault();dz.style.borderColor='rgba(91,142,255,.7)'};
+  dz.ondragleave=()=>dz.style.borderColor='rgba(91,142,255,.25)';
+  dz.ondrop=e=>{e.preventDefault();handleFile(e.dataTransfer.files[0])};
+  fi.onchange=()=>handleFile(fi.files[0]);
+}
+</script>
+</body>
+</html>

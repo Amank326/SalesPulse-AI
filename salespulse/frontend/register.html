@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up — SalesPulse AI</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body class="auth-page">
+    <nav class="nav">
+        <div class="nav-logo">SalesPulse <span>AI</span></div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#pricing">Pricing</a></li>
+        </ul>
+        <div class="nav-right">
+            <a class="btn-ghost" href="dashboard.html">Dashboard</a>
+            <button class="btn-nav-cta" onclick="location.href='register.html'">Get Started</button>
+        </div>
+    </nav>
+    <canvas id="authBgCanvas"></canvas>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo-mini">
+                    <svg width="40" height="40" viewBox="0 0 60 60" fill="none">
+                        <circle cx="30" cy="30" r="28" stroke="url(#grad)" stroke-width="2"/>
+                        <path d="M 20 35 L 30 20 L 40 35" stroke="url(#grad)" stroke-width="2" fill="none" stroke-linecap="round"/>
+                        <defs>
+                            <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#00D9FF;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#7B3FF2;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <h1>Create Your Account</h1>
+                <p>Start forecasting revenue in under 3 minutes</p>
+            </div>
+
+            <form class="auth-form" id="registerForm">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" placeholder="John Smith" required>
+                    <span class="input-focus"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" placeholder="you@company.com" required>
+                    <span class="input-focus"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="At least 8 characters" required>
+                    <span class="input-focus"></span>
+                </div>
+
+                <div class="form-terms">
+                    <input type="checkbox" id="terms" required>
+                    <label for="terms">I agree to the Terms of Service</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full">
+                    <span>Create Account</span>
+                    <span class="btn-icon">→</span>
+                </button>
+            </form>
+
+            <div class="auth-divider">
+                <span>Already have an account?</span>
+            </div>
+
+            <a href="dashboard.html" class="btn btn-secondary btn-full">Go to Dashboard</a>
+
+            <div class="auth-footer">
+                <a href="index.html">← Back to Home</a>
+            </div>
+        </div>
+
+        <div class="auth-info">
+            <div class="info-item">
+                <div class="info-icon">⏱️</div>
+                <h3>Fast Setup</h3>
+                <p>Ready in 3 minutes</p>
+            </div>
+            <div class="info-item">
+                <div class="info-icon">📊</div>
+                <h3>Instant Analytics</h3>
+                <p>Start analyzing immediately</p>
+            </div>
+            <div class="info-item">
+                <div class="info-icon">🎁</div>
+                <h3>Free Trial</h3>
+                <p>No credit card required</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/ui-animations.js"></script>
+    <script src="main.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => { if (window.initAuthBg) initAuthBg(); });
+    </script>
+</body>
+</html>
