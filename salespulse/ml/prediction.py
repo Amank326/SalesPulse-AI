@@ -8,8 +8,8 @@ except Exception:
 import numpy as np
 import matplotlib.pyplot as plt
 
-from salespulse.ml.preprocessing import clean_dataframe, select_numeric_columns
-from salespulse.ml.training import train_linear_model, load_model
+from ml.preprocessing import clean_dataframe, select_numeric_columns
+from ml.training import train_linear_model, load_model
 
 
 def forecast_df(df: pd.DataFrame, target_col: str = None, periods: int = 7) -> Dict[str, Any]:
