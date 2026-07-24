@@ -36,6 +36,7 @@ jobs:
           file: ./salespulse/Dockerfile
           push: true
           tags: ghcr.io/amank326/salespulse-ai:latest
+          labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
 
       - name: Deploy image to Azure Web App
         uses: azure/webapps-deploy@v3
