@@ -1,42 +1,423 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI-powered sales forecasting results with interactive charts and trend analysis">
   <title>Forecast — SalesPulse AI</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>body{font-family:Inter,Arial;background:#f5f7fb;padding:24px}</style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
 </head>
 <body>
-  <h1>Forecast Results</h1>
-  <div id="summary">
-    <p id="info">Loading forecast...</p>
-    <img id="forecastPlot" src="" alt="forecast plot" style="max-width:640px;display:none"/>
-  </div>
-  <script>
-    async function loadForecast(){
-      const token = localStorage.getItem('token');
-      const headers = {};
-      if(token) headers['Authorization'] = `Bearer ${token}`;
-      try{
-        const resp = await fetch('http://127.0.0.1:8000/api/forecast', {method:'POST', headers});
-        if(!resp.ok){
-          const err = await resp.json().catch(()=>null);
-          document.getElementById('info').textContent = 'Forecast failed: ' + (err?.detail || resp.status);
+<canvas id="mesh"></canvas>
+<div class="dash-layout">
+  <aside class="sidebar">
+    <div class="sb-logo">Sales<span>Pulse</span></div>
+    <ul class="sb-nav">
+      <li><a href="dashboard.html"><span class="sb-icon">📊</span> Dashboard</a></li>
+      <li><a href="forecast.html" class="active"><span class="sb-icon">🔮</span> Forecasts</a></li>
+      <li><a href="upload.html"><span class="sb-icon">📁</span> Upload Data</a></li>
+      <li><a href="#"><span class="sb-icon">📈</span> Analytics</a></li>
+      <li><a href="#"><span class="sb-icon">🤖</span> AI Insights</a></li>
+      <li><a href="#"><span class="sb-icon">⚙️</span> Settings</a></li>
+    </ul>
+    <div class="sb-bottom">
+      <div class="sb-user">
+        <div class="sb-avatar" id="userInitial">A</div>
+        <div><div class="sb-name" id="userName">Aman Gupta</div><div class="sb-role">Pro Plan</div></div>
+      </div>
+      <button id="logoutBtn" class="btn-sidebar-logout">Sign out</button>
+    </div>
+  </aside>
+
+  <main class="dash-main">
+    <div class="dash-header">
+      <div>
+        <div class="dash-title">AI Forecast Results</div>
+        <div class="dash-sub" id="forecastSubtitle">Generating predictions...</div>
+      </div>
+      <div style="display:flex;gap:12px">
+        <select id="forecastMonths" class="dash-select">
+          <option value="7">7 Periods</option>
+          <option value="30" selected>30 Periods</option>
+          <option value="90">90 Periods</option>
+          <option value="365">365 Periods</option>
+        </select>
+        <button id="runForecastBtn" class="btn-nav-cta" style="font-size:14px;padding:10px 24px">🔮 Run Forecast</button>
+      </div>
+    </div>
+
+    <!-- Loading state -->
+    <div id="forecastLoading" class="chart-card" style="text-align:center;padding:60px">
+      <div style="font-size:48px;margin-bottom:20px;animation:float 2s ease-in-out infinite">🔮</div>
+      <div style="font-size:18px;font-weight:600;color:#fff;margin-bottom:10px" id="loadingText">Loading forecast...</div>
+      <div style="font-size:14px;color:rgba(201,209,224,.5)" id="loadingDetail">Connecting to AI engine</div>
+    </div>
+
+    <!-- No data state -->
+    <div id="forecastNoData" style="display:none" class="chart-card" style="text-align:center;padding:60px">
+      <div style="text-align:center;padding:40px">
+        <div style="font-size:48px;margin-bottom:20px">📁</div>
+        <div style="font-size:18px;font-weight:600;color:#fff;margin-bottom:10px">No Data Uploaded Yet</div>
+        <div style="font-size:14px;color:rgba(201,209,224,.5);margin-bottom:24px">Upload a CSV or Excel file to generate AI forecasts</div>
+        <a href="upload.html" class="btn-nav-cta" style="font-size:14px;padding:12px 28px;text-decoration:none;display:inline-block">📤 Upload Data</a>
+      </div>
+    </div>
+
+    <!-- Forecast results -->
+    <div id="forecastResults" style="display:none">
+      <!-- KPI Summary -->
+      <div class="kpi-grid" style="margin-bottom:24px">
+        <div class="kpi-card">
+          <div class="kpi-label">🎯 Validation Accuracy</div>
+          <div class="kpi-val" id="fAccuracy" style="color:#00D9FF">—</div>
+          <div class="kpi-change up">R² Score</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">📊 Validation MAE</div>
+          <div class="kpi-val" id="fTotalActual">—</div>
+          <div class="kpi-change up">Mean Abs Error</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">🔮 Forecast Sum</div>
+          <div class="kpi-val" id="fForecastTotal" style="color:#7B3FF2">—</div>
+          <div class="kpi-change up" id="fGrowth">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">⚡ Optimal Model</div>
+          <div class="kpi-val" style="font-size:16px;color:#38E2D8" id="fModel">—</div>
+          <div class="kpi-change up" id="fGenTime">—</div>
+        </div>
+      </div>
+
+      <!-- Forecast Chart -->
+      <div class="chart-card" style="margin-bottom:24px">
+        <div class="chart-title">📈 Revenue Trend + AI Forecast</div>
+        <div class="chart-sub">Actual data (cyan) vs AI predictions (purple dashed)</div>
+        <canvas id="forecastChart" height="100"></canvas>
+      </div>
+
+      <!-- AI Summary and Insights Section -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
+        <!-- AI Reports -->
+        <div class="chart-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+            <div class="chart-title">🤖 AI Strategy Reports</div>
+            <select id="reportTypeSelect" class="dash-select" style="padding:6px 12px;font-size:12.5px">
+              <option value="summary">Summary</option>
+              <option value="executive">Executive</option>
+              <option value="marketing">Marketing</option>
+              <option value="inventory">Inventory</option>
+              <option value="risk">Risk Analysis</option>
+              <option value="revenue">Revenue Insights</option>
+            </select>
+          </div>
+          <div id="reportContainer" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:18px;min-height:260px;max-height:360px;overflow-y:auto;font-size:13.5px;line-height:1.6;color:rgba(201,209,224,0.85)">
+            Select a report type above and click "Generate" to trigger the Google Gemini model.
+          </div>
+          <div style="margin-top:14px;display:flex;justify-content:flex-end">
+            <button id="generateReportBtn" class="btn-nav-cta" style="font-size:13px;padding:8px 18px">Generate Strategic Report</button>
+          </div>
+        </div>
+
+        <!-- AI Chat Interface -->
+        <div class="chart-card" style="display:flex;flex-direction:column">
+          <div class="chart-title" style="margin-bottom:12px">💬 Chat with your Dataset</div>
+          <!-- Chat box -->
+          <div id="chatBox" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:10px;padding:14px;flex-grow:1;min-height:220px;max-height:280px;overflow-y:auto;margin-bottom:12px;display:flex;flex-direction:column;gap:10px">
+            <div style="align-self:flex-start;background:rgba(123,63,242,0.1);border:1px solid rgba(123,63,242,0.2);color:#fff;border-radius:12px;padding:10px 14px;font-size:13.5px;max-width:85%">
+              Hello! I am your SalesPulse assistant. Ask me anything about your history, forecasts, or growth rates.
+            </div>
+          </div>
+          <!-- Chat input -->
+          <div style="display:flex;gap:10px">
+            <input type="text" id="chatInput" placeholder="Ask a question..." style="flex-grow:1;padding:10px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(0,217,255,0.2);border-radius:10px;color:#fff;font-family:inherit;outline:none;font-size:13.5px">
+            <button id="chatSendBtn" class="btn-nav-cta" style="font-size:13px;padding:10px 20px">Send</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex;gap:12px">
+        <a href="dashboard.html" class="btn-nav-cta" style="font-size:14px;padding:10px 24px;text-decoration:none">📊 View Dashboard</a>
+        <a href="upload.html" class="btn-ghost" style="font-size:14px;text-decoration:none">📤 Upload New Data</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="main.js"></script>
+<script>
+  // User display
+  const uName = localStorage.getItem('userName') || 'Guest';
+  const nameEl = document.getElementById('userName');
+  const initEl = document.getElementById('userInitial');
+  if (nameEl) nameEl.textContent = uName;
+  if (initEl) initEl.textContent = uName.charAt(0).toUpperCase();
+
+  // Logout
+  document.getElementById('logoutBtn').addEventListener('click', function() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('sp_user');
+    window.location.href = 'index.html';
+  });
+
+  let forecastChartInstance = null;
+  let chatHistory = [];
+
+  async function loadForecast(periods) {
+    const token = localStorage.getItem('token');
+    const loading = document.getElementById('forecastLoading');
+    const noData = document.getElementById('forecastNoData');
+    const results = document.getElementById('forecastResults');
+
+    loading.style.display = 'block';
+    noData.style.display = 'none';
+    results.style.display = 'none';
+
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+
+    try {
+      const resp = await fetch(window.API_BASE + '/api/forecast', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ months: periods || 30 })
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => null);
+        const detail = err?.detail || 'Error ' + resp.status;
+
+        if (resp.status === 400 && detail.includes('No data uploaded')) {
+          loading.style.display = 'none';
+          noData.style.display = 'block';
           return;
         }
-        const data = await resp.json();
-        document.getElementById('info').textContent = `Forecast for ${data.target_col}: ${data.predictions.join(', ')}`;
-        if(data.plot){
-          const img = document.getElementById('forecastPlot');
-          img.src = data.plot;
-          img.style.display = 'block';
-        }
-      }catch(e){
-        document.getElementById('info').textContent = 'Unable to reach backend: ' + e.message;
+        loading.style.display = 'none';
+        document.getElementById('loadingText').textContent = 'Forecast failed';
+        document.getElementById('loadingDetail').textContent = detail;
+        loading.style.display = 'block';
+        return;
       }
+
+      const data = await resp.json();
+      loading.style.display = 'none';
+      results.style.display = 'block';
+
+      // Populate KPIs
+      const metricPackage = data.metrics || {};
+      document.getElementById('fAccuracy').textContent = (metricPackage.val_r2 !== undefined ? (metricPackage.val_r2 * 100).toFixed(1) + '%' : 'N/A');
+      document.getElementById('fTotalActual').textContent = (metricPackage.val_mae !== undefined ? '₹' + Number(metricPackage.val_mae).toLocaleString() : 'N/A');
+      
+      const forecastVals = data.forecast?.values || [];
+      const forecastSum = forecastVals.reduce((a, b) => a + b, 0);
+      document.getElementById('fForecastTotal').textContent = '₹' + Number(forecastSum).toLocaleString();
+      
+      const growthPercent = metricPackage.growth_percent || 0;
+      document.getElementById('fGrowth').textContent = 'MAE: ' + (metricPackage.val_mae || 'N/A');
+      
+      document.getElementById('fModel').textContent = metricPackage.best_model || 'Best Estimator';
+      document.getElementById('fGenTime').textContent = 'Frequency: ' + (data.freq || 'Daily');
+      document.getElementById('forecastSubtitle').textContent = 'Forecast generated for ' + forecastVals.length + ' periods using auto-selected ' + (metricPackage.best_model || 'estimations');
+
+      // Build chart
+      const historyDates = data.history?.dates || [];
+      const historyVals = data.history?.values || [];
+      const forecastDates = data.forecast?.dates || [];
+      
+      const allLabels = [...historyDates, ...forecastDates];
+      const actualData = [...historyVals, ...Array(forecastVals.length).fill(null)];
+      
+      // Connect history last point to forecast start point for smooth charting
+      const forecastData = [...Array(historyVals.length - 1).fill(null), historyVals.slice(-1)[0] || null, ...forecastVals];
+
+      if (forecastChartInstance) forecastChartInstance.destroy();
+
+      forecastChartInstance = new Chart(document.getElementById('forecastChart'), {
+        type: 'line',
+        data: {
+          labels: allLabels,
+          datasets: [
+            {
+              label: 'Actual Sales',
+              data: actualData,
+              borderColor: '#00D9FF',
+              backgroundColor: 'rgba(0,217,255,0.06)',
+              fill: true,
+              tension: 0.3,
+              pointBackgroundColor: '#00D9FF',
+              pointRadius: 2,
+              pointHoverRadius: 5,
+              borderWidth: 2
+            },
+            {
+              label: 'AI Forecast',
+              data: forecastData,
+              borderColor: '#7B3FF2',
+              backgroundColor: 'rgba(123,63,242,0.04)',
+              fill: true,
+              tension: 0.3,
+              borderDash: [6, 4],
+              pointBackgroundColor: '#7B3FF2',
+              pointRadius: 2,
+              pointHoverRadius: 5,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { labels: { color: 'rgba(201,209,224,0.7)', font: { size: 12, weight: 600 } } }
+          },
+          scales: {
+            y: {
+              ticks: { color: 'rgba(201,209,224,0.5)', callback: v => '₹' + v.toLocaleString() },
+              grid: { color: 'rgba(255,255,255,0.04)' }
+            },
+            x: {
+              ticks: { color: 'rgba(201,209,224,0.5)', maxTicksLimit: 12 },
+              grid: { color: 'rgba(255,255,255,0.04)' }
+            }
+          }
+        }
+      });
+
+      // Auto-trigger default summary report after forecast generation
+      generateReport('summary');
+
+    } catch (e) {
+      loading.style.display = 'block';
+      document.getElementById('loadingText').textContent = 'Cannot reach backend';
+      document.getElementById('loadingDetail').textContent = e.message;
     }
-    loadForecast();
-  </script>
+  }
+
+  // AI Strategic Report Trigger
+  async function generateReport(type) {
+    const token = localStorage.getItem('token');
+    const container = document.getElementById('reportContainer');
+    container.innerHTML = '<div style="display:flex;align-items:center;gap:10px;justify-content:center;height:100%"><span style="animation:float 1.5s infinite;font-size:24px">🤖</span> Planning report strategies...</div>';
+    
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+
+    try {
+      const resp = await fetch(window.API_BASE + '/api/ai-insights', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ report_type: type })
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => null);
+        container.innerHTML = `<span style="color:#FF6B6B">Report generation failed: ${err?.detail || resp.statusText}</span>`;
+        return;
+      }
+
+      const data = await resp.json();
+      // Render markdown safely (simple markdown to HTML conversion for headers and bold tags)
+      let formattedHtml = data.content
+        .replace(/### (.*)/g, '<h4 style="color:#00D9FF;margin-top:15px;margin-bottom:8px">$1</h4>')
+        .replace(/## (.*)/g, '<h3 style="color:#fff;margin-top:20px;margin-bottom:10px">$1</h3>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+
+      container.innerHTML = formattedHtml;
+    } catch(e) {
+      container.innerHTML = `<span style="color:#FF6B6B">Could not contact Gemini API: ${e.message}</span>`;
+    }
+  }
+
+  // AI chat messaging
+  async function sendChatMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    if (!message) return;
+
+    input.value = '';
+    const token = localStorage.getItem('token');
+    const chatBox = document.getElementById('chatBox');
+
+    // Add user message to UI
+    const userDiv = document.createElement('div');
+    userDiv.style.cssText = 'align-self:flex-end;background:rgba(0,217,255,0.1);border:1px solid rgba(0,217,255,0.2);color:#fff;border-radius:12px;padding:10px 14px;font-size:13.5px;max-width:85%';
+    userDiv.textContent = message;
+    chatBox.appendChild(userDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // Add loading indicator for bot
+    const botLoadingDiv = document.createElement('div');
+    botLoadingDiv.style.cssText = 'align-self:flex-start;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);color:rgba(201,209,224,0.7);border-radius:12px;padding:10px 14px;font-size:13.5px;max-width:85%';
+    botLoadingDiv.textContent = 'Analyzing...';
+    chatBox.appendChild(botLoadingDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+
+    try {
+      const resp = await fetch(window.API_BASE + '/api/ai-chat', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ message: message, history: chatHistory })
+      });
+
+      botLoadingDiv.remove();
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => null);
+        addBotMessage(`Error: ${err?.detail || resp.statusText}`);
+        return;
+      }
+
+      const data = await resp.json();
+      addBotMessage(data.reply);
+      
+      // Update history context
+      chatHistory.push({ role: 'user', content: message });
+      chatHistory.push({ role: 'assistant', content: data.reply });
+
+    } catch(e) {
+      botLoadingDiv.remove();
+      addBotMessage(`Unable to connect to chat API: ${e.message}`);
+    }
+  }
+
+  function addBotMessage(text) {
+    const chatBox = document.getElementById('chatBox');
+    const botDiv = document.createElement('div');
+    botDiv.style.cssText = 'align-self:flex-start;background:rgba(123,63,242,0.1);border:1px solid rgba(123,63,242,0.2);color:#fff;border-radius:12px;padding:10px 14px;font-size:13.5px;max-width:85%';
+    
+    // Simple formatting
+    botDiv.innerHTML = text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    chatBox.appendChild(botDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  // Initial trigger
+  loadForecast(parseInt(document.getElementById('forecastMonths').value));
+
+  // Run button handler
+  document.getElementById('runForecastBtn').addEventListener('click', function() {
+    loadForecast(parseInt(document.getElementById('forecastMonths').value));
+  });
+
+  // Report change handler
+  document.getElementById('generateReportBtn').addEventListener('click', function() {
+    const type = document.getElementById('reportTypeSelect').value;
+    generateReport(type);
+  });
+
+  // Chat send button handlers
+  document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
+  document.getElementById('chatInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') sendChatMessage();
+  });
+</script>
 </body>
 </html>

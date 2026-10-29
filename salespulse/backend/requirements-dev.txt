@@ -6,3 +6,8 @@ httpx
 scikit-learn
 joblib
 numpy
+pandas
+matplotlib
+openpyxl
+PyJWT
+bcrypt

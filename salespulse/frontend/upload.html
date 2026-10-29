@@ -2,11 +2,20 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="Upload your sales data CSV or Excel file for AI-powered analysis and forecasting.">
 <title>Upload Data — SalesPulse AI</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 </head>
 <body>
+<!-- Aurora blobs -->
+<div class="aurora-container">
+  <div class="aurora-blob aurora-blob-1"></div>
+  <div class="aurora-blob aurora-blob-2"></div>
+  <div class="aurora-blob aurora-blob-3"></div>
+</div>
+
 <canvas id="mesh"></canvas>
 <div class="dash-layout">
   <aside class="sidebar">
@@ -16,8 +25,6 @@
       <li><a href="forecast.html"><span class="sb-icon">🔮</span> Forecasts</a></li>
       <li><a href="upload.html" class="active"><span class="sb-icon">📁</span> Upload Data</a></li>
       <li><a href="#"><span class="sb-icon">📈</span> Analytics</a></li>
-      <li><a href="#"><span class="sb-icon">🌍</span> Regions</a></li>
-      <li><a href="#"><span class="sb-icon">📦</span> Inventory</a></li>
       <li><a href="#"><span class="sb-icon">🤖</span> AI Insights</a></li>
       <li><a href="#"><span class="sb-icon">⚙️</span> Settings</a></li>
     </ul>
@@ -26,33 +33,36 @@
         <div class="sb-avatar" id="userInitial">A</div>
         <div><div class="sb-name" id="userName">Aman Gupta</div><div class="sb-role">Pro Plan</div></div>
       </div>
-      <button onclick="logout()" style="width:100%;margin-top:12px;padding:8px;background:transparent;border:1px solid rgba(255,255,255,.08);border-radius:7px;color:rgba(201,209,224,.4);font-size:13px;cursor:pointer;font-family:'Inter',sans-serif">Sign out</button>
+      <button id="logoutBtn" class="btn-sidebar-logout">Sign out</button>
     </div>
   </aside>
 
   <main class="dash-main">
     <div class="dash-header">
-      <div><div class="dash-title">Upload Sales Data</div><div class="dash-sub">CSV or Excel file · Max 50MB · Auto-cleaned by AI</div></div>
+      <div>
+        <div class="dash-title">Upload Sales Data</div>
+        <div class="dash-sub">CSV or Excel file · Max 50MB · Auto-cleaned by AI</div>
+      </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:24px;margin-bottom:24px">
-      <div>
+    <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:24px;margin-bottom:24px" class="grid-container">
+      <div class="chart-card">
         <div class="upload-zone" id="dropZone">
           <div class="upload-icon">📂</div>
           <div class="upload-text">Drop your file here or click to browse</div>
           <div class="upload-sub">Supports CSV, XLS, XLSX · Up to 50MB</div>
-          <button class="btn-upload">Choose file</button>
+          <button class="btn-upload" type="button">Choose file</button>
           <input type="file" id="fileInput" accept=".csv,.xls,.xlsx" style="display:none">
         </div>
 
         <div id="uploadProgress" style="display:none;margin-top:16px">
-          <div style="background:#0C1120;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:20px">
+          <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px">
             <div style="display:flex;justify-content:space-between;margin-bottom:10px">
               <span style="font-size:13.5px;color:#fff;font-weight:500" id="progressLabel">Uploading...</span>
-              <span style="font-size:13px;color:#5B8EFF;font-weight:600" id="progressPct">0%</span>
+              <span style="font-size:13px;color:#00D9FF;font-weight:600" id="progressPct">0%</span>
             </div>
             <div style="height:6px;background:rgba(255,255,255,.06);border-radius:100px;overflow:hidden">
-              <div id="progressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#5B8EFF,#38E2D8);border-radius:100px;transition:width .4s ease"></div>
+              <div id="progressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#00D9FF,#7B3FF2);border-radius:100px;transition:width .4s ease"></div>
             </div>
           </div>
         </div>
@@ -60,8 +70,8 @@
 
       <div style="display:flex;flex-direction:column;gap:14px">
         <div class="chart-card">
-          <div class="chart-title">Required columns</div>
-          <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+          <div class="chart-title" style="margin-bottom:15px">Required columns</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
             <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:rgba(201,209,224,.6)"><span style="color:#38E2D8;font-weight:700">✓</span> Date / OrderDate</div>
             <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:rgba(201,209,224,.6)"><span style="color:#38E2D8;font-weight:700">✓</span> Sales / Revenue / Bill_amt</div>
             <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:rgba(201,209,224,.6)"><span style="color:#38E2D8;font-weight:700">✓</span> Product / Item / FoodItem</div>
@@ -70,21 +80,23 @@
             <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:rgba(201,209,224,.45)"><span style="color:#FBD134">○</span> Quantity (optional)</div>
           </div>
         </div>
-        <div class="chart-card" style="background:rgba(91,142,255,.05);border-color:rgba(91,142,255,.2)">
-          <div style="font-size:13px;font-weight:600;color:#7AAEFF;margin-bottom:8px">💡 Quick tip</div>
-          <div style="font-size:13px;color:rgba(201,209,224,.55);line-height:1.65">Even messy data works. SalesPulse auto-fixes missing dates, duplicate rows, and inconsistent spellings before running the forecast model.</div>
+        <div class="chart-card" style="background:rgba(0,217,255,.02);border-color:rgba(0,217,255,.15)">
+          <div style="font-size:13px;font-weight:600;color:#00D9FF;margin-bottom:8px">💡 Pro Tip</div>
+          <div style="font-size:13px;color:rgba(201,209,224,.55);line-height:1.65">Messy time-series files are auto-cleaned. SalesPulse reindexes missing dates, removes duplicate timestamps, and interpolates null fields automatically.</div>
         </div>
       </div>
     </div>
 
-    <div class="chart-card" id="previewCard" style="display:none">
+    <div class="chart-card" id="previewCard" style="display:none;margin-top:24px">
       <div class="chart-title" style="margin-bottom:14px">✅ Data Preview</div>
-      <table class="table-card" style="background:transparent;border:none;padding:0">
-        <thead><tr><th>OrderDate</th><th>HotelName</th><th>FoodItem</th><th>Quantity</th><th>Bill_amt</th><th>Status</th></tr></thead>
-        <tbody id="previewBody"></tbody>
-      </table>
-      <div style="margin-top:16px;display:flex;gap:12px">
-        <button onclick="runForecast()" class="btn-nav-cta" style="font-size:14px;padding:10px 24px">Run AI Forecast →</button>
+      <div style="overflow-x:auto">
+        <table class="dash-table" id="previewTable">
+          <thead id="previewHead"><tr></tr></thead>
+          <tbody id="previewBody"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:20px;display:flex;gap:12px">
+        <button onclick="location.href='forecast.html'" class="btn-nav-cta" style="font-size:14px;padding:12px 28px">Run AI Forecast →</button>
         <button onclick="location.href='dashboard.html'" class="btn-ghost" style="font-size:14px">View Dashboard</button>
       </div>
     </div>
@@ -93,78 +105,123 @@
 
 <script src="main.js"></script>
 <script>
-const sampleData=[
-  ['2023-10-01','Spice Paradise','Chicken Biryani','2','₹500','Delivered'],
-  ['2023-10-01','Pizza Palace','Pepperoni Pizza','1','₹300','Delivered'],
-  ['2023-10-02','Burger Bistro','Cheeseburger','3','₹1,047','Cancelled'],
-  ['2023-10-02','Spice Paradise','Paneer Tikka','1','₹200','In Progress'],
-  ['2023-10-03','Pizza Palace','Hawaiian Pizza','1','₹299','Delivered'],
-];
+// Upload handler — async function
+async function handleUpload(file) {
+  if (!file) return;
+  const prog = document.getElementById('uploadProgress');
+  const bar = document.getElementById('progressBar');
+  const pct = document.getElementById('progressPct');
+  const lbl = document.getElementById('progressLabel');
 
-function handleFile(file){
-  if(!file)return;
-  const prog=document.getElementById('uploadProgress');
-  const bar=document.getElementById('progressBar');
-  const pct=document.getElementById('progressPct');
-  const lbl=document.getElementById('progressLabel');
-    showToast('Uploading file...');
-    const token = localStorage.getItem('token');
-    const form = new FormData();
-    form.append('file', file, file.name);
-    try{
-      const resp = await fetch('http://127.0.0.1:8000/api/upload', {method:'POST', headers: token?{ 'Authorization': 'Bearer ' + token }:{}, body: form});
-      if(resp.ok){
-        const res = await resp.json();
-        showToast('Uploaded ' + res.rows + ' rows. Running forecast...');
-        // redirect to forecast page which will call /api/forecast
-        setTimeout(()=>location.href='forecast.html',800);
-        return;
-      } else {
-        const err = await resp.json().catch(()=>null);
-        showToast('Upload failed: ' + (err?.detail || resp.status),'error');
+  prog.style.display = 'block';
+  bar.style.width = '30%';
+  pct.textContent = '30%';
+  lbl.textContent = 'Uploading ' + file.name + '...';
+  showToast('Uploading ' + file.name + '...');
+
+  const tkn = localStorage.getItem('token');
+  const form = new FormData();
+  form.append('file', file, file.name);
+
+  try {
+    bar.style.width = '60%';
+    pct.textContent = '60%';
+    lbl.textContent = 'Processing with AI validation...';
+
+    const resp = await fetch(window.API_BASE + '/api/upload', {
+      method: 'POST',
+      headers: tkn ? { 'Authorization': 'Bearer ' + tkn } : {},
+      body: form
+    });
+
+    if (resp.ok) {
+      const res = await resp.json();
+      bar.style.width = '100%';
+      pct.textContent = '100%';
+      lbl.textContent = 'Complete!';
+      showToast('Uploaded ' + res.rows + ' rows successfully!');
+
+      if (res.preview && res.preview.length > 0) {
+        const card = document.getElementById('previewCard');
+        const thead = document.getElementById('previewHead').querySelector('tr');
+        const tbody = document.getElementById('previewBody');
+
+        thead.innerHTML = (res.columns || Object.keys(res.preview[0])).map(c => '<th>' + c + '</th>').join('');
+        tbody.innerHTML = res.preview.map(row => {
+          const cols = res.columns || Object.keys(row);
+          return '<tr>' + cols.map(c => '<td>' + (row[c] !== null && row[c] !== undefined ? row[c] : '') + '</td>').join('') + '</tr>';
+        }).join('');
+
+        card.style.display = 'block';
+        
+        // GSAP animate reveal
+        gsap.from(card, { duration: 0.8, y: 30, opacity: 0, ease: "power4.out" });
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
-    }catch(e){
-      // fallback to local simulation
-      showToast('Backend unavailable, processing locally...');
-      await new Promise(r=>setTimeout(r,1200));
-      const reader=new FileReader();
-      reader.onload=()=>{
-        const txt=reader.result;
-        const rows=txt.split('\n').slice(0,6);
-        const table=document.createElement('table');
-        rows.forEach(r=>{const tr=document.createElement('tr');r.split(',').forEach(c=>{const td=document.createElement('td');td.textContent=c;tr.appendChild(td)});table.appendChild(tr)});
-        document.getElementById('preview').innerHTML='';document.getElementById('preview').appendChild(table);
-        updateKPI({revenue: Math.floor(Math.random()*5000)+1000, orders: Math.floor(Math.random()*50)+10});
-        showToast('File processed (offline)');
-      }
-      reader.readAsText(file.slice(0,10000));
+    } else {
+      const err = await resp.json().catch(() => null);
+      bar.style.width = '0%';
+      showToast('Upload failed: ' + (err?.detail || resp.status), 'error');
     }
+  } catch (e) {
+    showToast('Backend unavailable — processing locally...', 'error');
+    bar.style.width = '100%';
+    pct.textContent = '100%';
+    lbl.textContent = 'Processed locally';
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const txt = reader.result;
+      const lines = txt.split('\n').filter(l => l.trim());
+      if (lines.length < 2) { showToast('File appears empty', 'error'); return; }
+
+      const headers = lines[0].split(',').map(h => h.trim());
+      const rows = lines.slice(1, 6);
+
+      const card = document.getElementById('previewCard');
+      const thead = document.getElementById('previewHead').querySelector('tr');
+      const tbody = document.getElementById('previewBody');
+
+      thead.innerHTML = headers.map(h => '<th>' + h + '</th>').join('');
+      tbody.innerHTML = rows.map(r => '<tr>' + r.split(',').map(c => '<td>' + c.trim() + '</td>').join('') + '</tr>').join('');
+
+      card.style.display = 'block';
+      gsap.from(card, { duration: 0.8, y: 30, opacity: 0, ease: "power4.out" });
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+    reader.readAsText(file.slice(0, 50000));
+  }
 }
 
-function showPreview(){
-  const card=document.getElementById('previewCard');
-  const tbody=document.getElementById('previewBody');
-  tbody.innerHTML=sampleData.map(r=>`<tr>${r.map((c,i)=>
-    i===5?`<td><span class="status-pill ${c==='Delivered'?'s-delivered':c==='Cancelled'?'s-cancelled':'s-progress'}">${c}</span></td>`
-    :`<td>${c}</td>`).join('')}</tr>`).join('');
-  card.style.display='block';
-  card.scrollIntoView({behavior:'smooth',block:'center'});
+const dz = document.getElementById('dropZone');
+const fi = document.getElementById('fileInput');
+if (dz && fi) {
+  dz.addEventListener('click', () => fi.click());
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor = '#00D9FF'; });
+  dz.addEventListener('dragleave', () => { dz.style.borderColor = 'rgba(255,255,255,0.1)'; });
+  dz.addEventListener('drop', e => { e.preventDefault(); dz.style.borderColor = 'rgba(255,255,255,0.1)'; handleUpload(e.dataTransfer.files[0]); });
+  fi.addEventListener('change', () => { handleUpload(fi.files[0]); });
 }
 
-function runForecast(){
-  showToast('Running Prophet + XGBoost ensemble...');
-  setTimeout(()=>{showToast('Forecast complete! Redirecting to dashboard...');setTimeout(()=>location.href='dashboard.html',1000)},2000);
-}
+// User display
+const uName = localStorage.getItem('userName') || 'Guest';
+const nameEl = document.getElementById('userName');
+const initEl = document.getElementById('userInitial');
+if (nameEl) nameEl.textContent = uName;
+if (initEl) initEl.textContent = uName.charAt(0).toUpperCase();
 
-const dz=document.getElementById('dropZone');
-const fi=document.getElementById('fileInput');
-if(dz&&fi){
-  dz.onclick=()=>fi.click();
-  dz.ondragover=e=>{e.preventDefault();dz.style.borderColor='rgba(91,142,255,.7)'};
-  dz.ondragleave=()=>dz.style.borderColor='rgba(91,142,255,.25)';
-  dz.ondrop=e=>{e.preventDefault();handleFile(e.dataTransfer.files[0])};
-  fi.onchange=()=>handleFile(fi.files[0]);
-}
+// Logout
+document.getElementById('logoutBtn').addEventListener('click', function() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('userName');
+  localStorage.removeItem('sp_user');
+  window.location.href = 'index.html';
+});
+
+// GSAP reveals
+window.addEventListener('DOMContentLoaded', () => {
+    gsap.from(".grid-container > div", { duration: 1, y: 30, opacity: 0, stagger: 0.15, ease: "power4.out" });
+});
 </script>
 </body>
 </html>

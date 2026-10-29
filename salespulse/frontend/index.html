@@ -3,32 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SalesPulse AI — Enterprise-grade revenue intelligence dashboard and predictive forecasting engine.">
     <title>SalesPulse AI — Next-Gen Sales Intelligence</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 </head>
 <body>
+    <!-- Aurora background blobs -->
+    <div class="aurora-container">
+        <div class="aurora-blob aurora-blob-1"></div>
+        <div class="aurora-blob aurora-blob-2"></div>
+        <div class="aurora-blob aurora-blob-3"></div>
+    </div>
+
     <nav class="nav">
         <div class="nav-logo">SalesPulse <span>AI</span></div>
         <ul class="nav-links">
             <li><a href="index.html">Home</a></li>
             <li><a href="#features">Features</a></li>
-            <li><a href="#pricing">Pricing</a></li>
-            <li><a href="#contact">Contact</a></li>
+            <li><a href="dashboard.html">Dashboard</a></li>
         </ul>
         <div class="nav-right">
-            <a class="btn-ghost" href="dashboard.html">Dashboard</a>
+            <a class="btn-ghost" href="login.html">Sign In</a>
             <button class="btn-nav-cta" onclick="location.href='register.html'">Get Started</button>
         </div>
     </nav>
+
     <div class="hero-container">
         <canvas id="heroCanvas"></canvas>
         <div class="hero-content">
             <div class="hero-logo">
-                <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
-                    <circle cx="30" cy="30" r="28" stroke="url(#grad)" stroke-width="2"/>
-                    <path d="M 20 35 L 30 20 L 40 35" stroke="url(#grad)" stroke-width="2" fill="none" stroke-linecap="round"/>
+                <svg width="64" height="64" viewBox="0 0 60 60" fill="none">
+                    <circle cx="30" cy="30" r="28" stroke="url(#grad)" stroke-width="2.5"/>
+                    <path d="M 20 35 L 30 20 L 40 35" stroke="url(#grad)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
                     <defs>
                         <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
                             <stop offset="0%" style="stop-color:#00D9FF;stop-opacity:1" />
@@ -37,60 +45,58 @@
                     </defs>
                 </svg>
             </div>
-            <h1 class="hero-title">SalesPulse AI</h1>
-            <p class="hero-subtitle">Enterprise-Grade Sales Forecasting with AI Intelligence</p>
+            <h1 class="hero-title">SalesPulse <em>AI</em></h1>
+            <p class="hero-subtitle">Enterprise-Grade Sales Forecasting & Intelligence. Elevate your revenue predictability with advanced recursive machine learning.</p>
+            
             <div class="hero-features">
-                <span class="feature-badge">🤖 Advanced AI Models</span>
-                <span class="feature-badge">📊 Real-Time Analytics</span>
-                <span class="feature-badge">🚀 Lightning Fast</span>
+                <span class="feature-badge">🤖 Auto-Selected ML Models</span>
+                <span class="feature-badge">📈 Recursive Forecasting</span>
+                <span class="feature-badge">💬 Context-Aware AI Chat</span>
             </div>
-                <div class="hero-buttons">
-                <a href="dashboard.html" class="btn btn-primary">Dashboard</a>
-                <a href="register.html" class="btn btn-secondary">Get Started Free</a>
+            
+            <div class="hero-buttons">
+                <a href="dashboard.html" class="btn btn-primary magnetic-btn">Explore Dashboard <span class="btn-icon">→</span></a>
+                <a href="register.html" class="btn btn-secondary magnetic-btn">Get Started Free</a>
             </div>
+
             <div class="floating-cards">
                 <div class="card card-1">
-                    <div class="card-icon">📈</div>
-                    <div class="card-text">Predictive Analytics</div>
+                    <div class="card-icon">🔮</div>
+                    <div class="card-text">Recursive Lags</div>
                 </div>
                 <div class="card card-2">
                     <div class="card-icon">🎯</div>
-                    <div class="card-text">Accuracy First</div>
+                    <div class="card-text">RF & LR Ensemble</div>
                 </div>
                 <div class="card card-3">
                     <div class="card-icon">⚡</div>
-                    <div class="card-text">Real-Time Insights</div>
+                    <div class="card-text">Gemini Reports</div>
                 </div>
             </div>
         </div>
         <div class="scroll-indicator">
-            <span>Scroll to explore</span>
+            <span>Scroll to explore features</span>
         </div>
     </div>
 
-    <section class="features-section">
+    <section class="features-section" id="features">
         <div class="section-content">
-            <h2>Powerful Features</h2>
+            <h2>Harness the Power of SalesPulse</h2>
             <div class="features-grid">
                 <div class="feature-item">
                     <div class="feature-icon">🔮</div>
-                    <h3>Intelligent Forecasting</h3>
-                    <p>ML-powered predictions using Linear Regression & Random Forest for accuracy up to 97%</p>
+                    <h3>Recursive Forecasting</h3>
+                    <p>Uses recursive auto-regressive computations to project demand accurately for up to 365 periods.</p>
                 </div>
                 <div class="feature-item">
                     <div class="feature-icon">📊</div>
-                    <h3>Advanced Analytics</h3>
-                    <p>Deep insights into revenue trends, growth patterns, and market dynamics</p>
+                    <h3>Model Optimization</h3>
+                    <p>Automatically trains and evaluates Linear Regression and Random Forest models on your dataset, choosing the best predictor.</p>
                 </div>
                 <div class="feature-item">
-                    <div class="feature-icon">🔐</div>
-                    <h3>Enterprise Security</h3>
-                    <p>Bank-grade encryption and secure token authentication</p>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon">⚡</div>
-                    <h3>Lightning Performance</h3>
-                    <p>Sub-second response times and real-time data processing</p>
+                    <div class="feature-icon">🤖</div>
+                    <h3>Gemini AI Analytics</h3>
+                    <p>Secures instant strategic executive briefs, marketing plans, inventory reports, and risks summaries directly from Google's Gemini.</p>
                 </div>
             </div>
         </div>
@@ -98,10 +104,17 @@
 
     <script src="js/hero-scene.js"></script>
     <script src="js/ui-animations.js"></script>
+    <script src="main.js"></script>
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             if (window.initHeroScene) initHeroScene();
-            else if (window.initHeroCanvas) initHeroCanvas();
+            
+            // GSAP Entrance reveals
+            gsap.from(".hero-title", { duration: 1.2, y: 30, opacity: 0, ease: "power4.out" });
+            gsap.from(".hero-subtitle", { duration: 1.2, y: 20, opacity: 0, delay: 0.2, ease: "power4.out" });
+            gsap.from(".hero-features", { duration: 1.2, y: 15, opacity: 0, delay: 0.3, ease: "power4.out" });
+            gsap.from(".hero-buttons", { duration: 1.2, y: 10, opacity: 0, delay: 0.4, ease: "power4.out" });
+            gsap.from(".floating-cards .card", { duration: 1.4, y: 40, opacity: 0, delay: 0.6, stagger: 0.15, ease: "back.out(1.7)" });
         });
     </script>
 </body>

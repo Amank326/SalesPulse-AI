@@ -1,4 +1,4 @@
-// Enhanced hero 3D scene for SalesPulse — procedural crystals, particles, parallax
+// Advanced premium holographic 3D particle globe for SalesPulse AI
 (function(){
   function safeGet(id){ return document.getElementById(id); }
   window.initHeroScene = function initHeroScene(){
@@ -8,122 +8,239 @@
     const THREE = window.THREE;
     if (!THREE) return console.warn('Three.js required for hero scene');
 
-    // renderer & basic scene
+    // Renderer setting
     const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-    renderer.setPixelRatio(window.devicePixelRatio || 1);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     function setSize(){ renderer.setSize(window.innerWidth, window.innerHeight); }
     setSize();
+    
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 0, 6);
+    
+    // Perspective Camera setup
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 0, 7.5);
 
-    // Lighting
-    const ambient = new THREE.AmbientLight(0xffffff, 0.35); scene.add(ambient);
-    const rim = new THREE.DirectionalLight(0x9be7ff, 0.8); rim.position.set(-4,3,6); scene.add(rim);
-    const fill = new THREE.PointLight(0xff8edf, 0.6, 30); fill.position.set(4,-2,3); scene.add(fill);
+    // ── LIGHTS ──
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+    scene.add(ambientLight);
 
-    // central crystal (icosahedron with vertex wobble)
-    const icoGeo = new THREE.IcosahedronGeometry(1.2, 2);
-    // backup original positions for wobble
-    const origPos = new Float32Array(icoGeo.attributes.position.array.length);
-    origPos.set(icoGeo.attributes.position.array);
-    icoGeo.setAttribute('origPos', new THREE.BufferAttribute(origPos, 3));
-    const crystalMat = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      metalness: 0.25,
-      roughness: 0.05,
-      emissive: 0x4b2fff,
-      emissiveIntensity: 0.15,
+    const primaryLight = new THREE.PointLight(0x00D9FF, 2, 20);
+    primaryLight.position.set(4, 4, 4);
+    scene.add(primaryLight);
+
+    const accentLight = new THREE.PointLight(0x7B3FF2, 1.5, 20);
+    accentLight.position.set(-4, -4, 4);
+    scene.add(accentLight);
+
+    // ── HOLOGRAPHIC GLOBE PARTICLES ──
+    const globeRadius = 2.2;
+    const globeGroup = new THREE.Group();
+    scene.add(globeGroup);
+
+    // Build particle points on a sphere
+    const particleCount = 1200;
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    const colors = new Float32Array(particleCount * 3);
+
+    const colorPrimary = new THREE.Color(0x00D9FF);
+    const colorSecondary = new THREE.Color(0x7B3FF2);
+
+    for (let i = 0; i < particleCount; i++) {
+      // Golden ratio placement for uniform sphere coverage
+      const phi = Math.acos(-1 + (2 * i) / particleCount);
+      const theta = Math.sqrt(particleCount * Math.PI) * phi;
+
+      const x = globeRadius * Math.sin(phi) * Math.cos(theta);
+      const y = globeRadius * Math.sin(phi) * Math.sin(theta);
+      const z = globeRadius * Math.cos(phi);
+
+      positions[i * 3] = x;
+      positions[i * 3 + 1] = y;
+      positions[i * 3 + 2] = z;
+
+      // Color interpolation based on height/position
+      const mixedColor = colorPrimary.clone().lerp(colorSecondary, (y + globeRadius) / (2 * globeRadius));
+      colors[i * 3] = mixedColor.r;
+      colors[i * 3 + 1] = mixedColor.g;
+      colors[i * 3 + 2] = mixedColor.b;
+    }
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+    // Glow points texture mapping
+    const material = new THREE.PointsMaterial({
+      size: 0.045,
+      vertexColors: true,
       transparent: true,
-      opacity: 0.98,
-      envMapIntensity: 0.6
-    });
-    const crystal = new THREE.Mesh(icoGeo, crystalMat); crystal.castShadow = true; scene.add(crystal);
-
-    // ring of shards
-    const shards = new THREE.Group();
-    const shardGeo = new THREE.OctahedronGeometry(0.28,0);
-    const shardMat = new THREE.MeshStandardMaterial({ color:0x7B3FF2, metalness:0.18, roughness:0.2, emissive:0x001122, transparent:true, opacity:0.92});
-    for(let i=0;i<18;i++){
-      const m = new THREE.Mesh(shardGeo, shardMat);
-      const a = (i/18)*Math.PI*2;
-      const r = 2.2 + Math.random()*0.35;
-      m.position.set(Math.cos(a)*r, (Math.random()-0.5)*0.5, Math.sin(a)*r);
-      m.lookAt(0,0,0);
-      m.scale.setScalar(0.9+Math.random()*0.5);
-      shards.add(m);
-    }
-    scene.add(shards);
-
-    // soft particle field for depth
-    const particleCount = 400;
-    const pg = new THREE.BufferGeometry();
-    const pArr = new Float32Array(particleCount*3);
-    for(let i=0;i<particleCount;i++){
-      pArr[i*3] = (Math.random()-0.5)*20;
-      pArr[i*3+1] = (Math.random()-0.5)*10;
-      pArr[i*3+2] = (Math.random()-0.5)*20;
-    }
-    pg.setAttribute('position', new THREE.BufferAttribute(pArr,3));
-    const pm = new THREE.PointsMaterial({ size:0.06, color:0x9be7ff, transparent:true, opacity:0.65, depthWrite:false });
-    const particles = new THREE.Points(pg, pm); scene.add(particles);
-
-    // subtle CSS card parallax (floating cards in hero)
-    const cards = document.querySelectorAll('.floating-cards .card');
-
-    // mouse parallax
-    const state = { mx:0, my:0, tx:0, ty:0 };
-    window.addEventListener('mousemove', (ev)=>{
-      const nx = (ev.clientX/window.innerWidth)-0.5;
-      const ny = (ev.clientY/window.innerHeight)-0.5;
-      state.mx = nx; state.my = ny;
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
     });
 
-    // animate loop
-    let time = 0;
-    function animate(){
-      time += 0.01;
-      // wobble crystal vertices
-      const posAttr = icoGeo.attributes.position;
-      const orig = icoGeo.attributes.origPos.array;
-      for(let i=0;i<posAttr.count;i++){
-        const ix = i*3, iy = ix+1, iz = ix+2;
-        posAttr.array[ix] = orig[ix] + Math.sin(time*2 + i)*0.02;
-        posAttr.array[iy] = orig[iy] + Math.cos(time*1.5 + i*0.3)*0.02;
-        posAttr.array[iz] = orig[iz] + Math.sin(time*1.2 + i*0.7)*0.01;
-      }
-      posAttr.needsUpdate = true;
+    const globeParticles = new THREE.Points(geometry, material);
+    globeGroup.add(globeParticles);
 
-      crystal.rotation.y += 0.005;
-      crystal.rotation.x = Math.sin(time*0.3)*0.08;
+    // ── CONCENTRIC GLOWING DATA RINGS ──
+    const ringGroup = new THREE.Group();
+    globeGroup.add(ringGroup);
 
-      shards.rotation.y -= 0.002;
-      shards.children.forEach((c,i)=>{ c.rotation.z += 0.002 + (i*0.0001); });
-
-      particles.rotation.y += 0.0006;
-
-      // smooth camera follow mouse
-      state.tx += (state.mx*1.8 - state.tx) * 0.06;
-      state.ty += (state.my*0.6 - state.ty) * 0.06;
-      camera.position.x = state.tx * 1.4;
-      camera.position.y = -state.ty * 1.2;
-      camera.lookAt(0,0,0);
-
-      // card CSS parallax
-      cards.forEach((el,idx)=>{
-        const depth = (idx - (cards.length/2)) * 6;
-        const rx = state.mx * 10 * (0.6 + idx*0.08);
-        const ry = state.my * 8 * (0.6 + idx*0.06);
-        el.style.transform = `translate3d(${rx}px, ${-ry}px, 0) rotate(${rx*0.02}deg)`;
+    const ringCount = 3;
+    const ringRays = [];
+    for (let i = 0; i < ringCount; i++) {
+      const radius = globeRadius + 0.15 + (i * 0.2);
+      const ringGeo = new THREE.RingGeometry(radius, radius + 0.015, 64);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: i % 2 === 0 ? 0x00D9FF : 0x7B3FF2,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.15 - (i * 0.04),
+        blending: THREE.AdditiveBlending
       });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      
+      // Pivot rotations slightly to look futuristic
+      ring.rotation.x = Math.random() * Math.PI;
+      ring.rotation.y = Math.random() * Math.PI;
+      
+      ringGroup.add(ring);
+      ringRays.push({ mesh: ring, speedX: 0.002 * (i + 1), speedY: 0.001 * (i + 1) });
+    }
+
+    // ── DATA SHARDS (Floating crystals) ──
+    const shardCount = 12;
+    const shardGeo = new THREE.IcosahedronGeometry(0.15, 0);
+    const shardMat = new THREE.MeshStandardMaterial({
+      color: 0x38E2D8,
+      metalness: 0.9,
+      roughness: 0.1,
+      transparent: true,
+      opacity: 0.8,
+      emissive: 0x003344
+    });
+
+    const shards = [];
+    for (let i = 0; i < shardCount; i++) {
+      const shardMesh = new THREE.Mesh(shardGeo, shardMat);
+      
+      // Random position in sphere shell surrounding the globe
+      const u = Math.random();
+      const v = Math.random();
+      const theta = u * 2.0 * Math.PI;
+      const phi = Math.acos(2.0 * v - 1.0);
+      const r = globeRadius + 0.6 + Math.random() * 0.8;
+
+      shardMesh.position.set(
+        r * Math.sin(phi) * Math.cos(theta),
+        r * Math.sin(phi) * Math.sin(theta),
+        r * Math.cos(phi)
+      );
+
+      shardMesh.scale.setScalar(0.7 + Math.random() * 0.6);
+      globeGroup.add(shardMesh);
+      shards.push({
+        mesh: shardMesh,
+        speedX: (Math.random() - 0.5) * 0.01,
+        speedY: (Math.random() - 0.5) * 0.01,
+        orbitSpeed: 0.002 + Math.random() * 0.003,
+        orbitRadius: r,
+        angle: Math.random() * Math.PI * 2
+      });
+    }
+
+    // ── BACKGROUND SPACE PARTICLES (Depth of field) ──
+    const bgParticleCount = 350;
+    const bgGeo = new THREE.BufferGeometry();
+    const bgPositions = new Float32Array(bgParticleCount * 3);
+    for (let i = 0; i < bgParticleCount; i++) {
+      bgPositions[i * 3] = (Math.random() - 0.5) * 22;
+      bgPositions[i * 3 + 1] = (Math.random() - 0.5) * 12;
+      bgPositions[i * 3 + 2] = (Math.random() - 0.5) * 15 - 5; // pushed further back
+    }
+    bgGeo.setAttribute('position', new THREE.BufferAttribute(bgPositions, 3));
+    const bgMat = new THREE.PointsMaterial({
+      size: 0.05,
+      color: 0x00D9FF,
+      transparent: true,
+      opacity: 0.35,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const bgPoints = new THREE.Points(bgGeo, bgMat);
+    scene.add(bgPoints);
+
+    // ── MOUSE REACTIVE PARALLAX & LIGHTS ──
+    const targetMouse = { x: 0, y: 0 };
+    const currentMouse = { x: 0, y: 0 };
+
+    window.addEventListener('mousemove', (ev) => {
+      targetMouse.x = (ev.clientX / window.innerWidth) - 0.5;
+      targetMouse.y = (ev.clientY / window.innerHeight) - 0.5;
+    });
+
+    // ── ANIMATION LOOP ──
+    let time = 0;
+    function animate() {
+      time += 0.01;
+
+      // Spin globe
+      globeParticles.rotation.y += 0.0025;
+      globeParticles.rotation.x = Math.sin(time * 0.2) * 0.05;
+
+      // Animate Concentric Rings
+      ringRays.forEach(item => {
+        item.mesh.rotation.x += item.speedX;
+        item.mesh.rotation.y += item.speedY;
+      });
+
+      // Animate Shards
+      shards.forEach(s => {
+        s.mesh.rotation.x += s.speedX;
+        s.mesh.rotation.y += s.speedY;
+        
+        // Orbit around Y axis
+        s.angle += s.orbitSpeed;
+        s.mesh.position.x = Math.cos(s.angle) * s.orbitRadius;
+        s.mesh.position.z = Math.sin(s.angle) * s.orbitRadius;
+      });
+
+      // Slowly rotate background stars
+      bgPoints.rotation.y += 0.0003;
+      bgPoints.rotation.x += 0.0001;
+
+      // Smooth interpolation for mouse movements
+      currentMouse.x += (targetMouse.x - currentMouse.x) * 0.05;
+      currentMouse.y += (targetMouse.y - currentMouse.y) * 0.05;
+
+      // Parallax camera movement
+      camera.position.x = currentMouse.x * 1.8;
+      camera.position.y = -currentMouse.y * 1.8;
+      camera.lookAt(0, 0, 0);
+
+      // Mouse reactive lighting tracking
+      primaryLight.position.x = 4 + currentMouse.x * 8;
+      primaryLight.position.y = 4 - currentMouse.y * 8;
 
       renderer.render(scene, camera);
       requestAnimationFrame(animate);
     }
     animate();
 
-    window.addEventListener('resize', ()=>{ camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); setSize(); });
+    // Responsive camera aspect ratio adjustment
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      setSize();
+    });
   };
-  // auto-init on DOMContentLoaded if hero present (keeps existing workflows simple)
-  window.addEventListener('DOMContentLoaded', ()=>{ try{ if (document.getElementById('heroCanvas') && window.initHeroScene) initHeroScene(); }catch(e){} });
+
+  // Auto-init on page load
+  window.addEventListener('DOMContentLoaded', () => {
+    try {
+      if (document.getElementById('heroCanvas') && window.initHeroScene) {
+        window.initHeroScene();
+      }
+    } catch(e) {}
+  });
 })();

@@ -1,9 +1,7 @@
 name: Build, publish, and deploy SalesPulse AI
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 permissions:
   contents: read

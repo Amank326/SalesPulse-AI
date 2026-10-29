@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: salespulse-ai-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./salespulse/Dockerfile
+    dockerContext: ./salespulse
+    healthCheckPath: /api/health
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://amank326.github.io/SalesPulse-AI
+      - key: GEMINI_API_KEY
+        sync: false
